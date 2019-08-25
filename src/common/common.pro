@@ -14,8 +14,11 @@ CONFIG += staticlib
 
 QMAKE_CXXFLAGS += -std=c++11
 
-INCLUDEPATH += $$top_srcdir/src
+INCLUDEPATH += $$top_srcdir/src \
+               $$top_srcdir/3rdparty/pugixml/src
 
-SOURCES += downloadmanager.cpp
+SOURCES += downloadmanager.cpp \
+           autoupdate.cpp
 
-HEADERS += downloadmanager.h
+HEADERS += downloadmanager.h \
+           autoupdate.h

@@ -5,6 +5,8 @@
 #include "videoplayer.h"
 #include "controller.h"
 #include "background_peaks_update.h"
+#include <common/autoupdate.h>
+#include <QMessageBox>
 #ifdef WIN32
 #include <windows.h>
 #endif
@@ -730,6 +732,36 @@ MainWindow::~MainWindow()
 {
 	analytics->sessionEnd();
     delete mavenParameters;
+}
+
+void MainWindow::showEvent(QShowEvent* event)
+{
+    // things that need to be done after the mainwidow gets displayed
+    qDebug() << "show event";
+    std::cerr << "show event";
+    gettingstarted->showDialog();
+    // check if new update is available, if yes show the update ui
+    if(getController()->getUpdater()->updateAvailable) {
+        qDebug() << "Update available";
+        std::cerr << "Update available";
+    }
+}
+
+void MainWindow::updateInstalled()
+{
+    qDebug() << "update installed";
+    QMessageBox msgBox(this);
+    msgBox.setText("Update has been installed. Please restart to use the updated version");
+    msgBox.setStandardButtons(QMessageBox::Ok);
+    msgBox.exec();
+    // show a pop up, asking to restart now or restart later
+    // save the current progress if the user chooses to restart now;
+}
+
+void MainWindow::updateFailed()
+{
+    qDebug() << "update failed";
+    // inform that the update failed
 }
 
 void MainWindow::saveSettingsToLog() {

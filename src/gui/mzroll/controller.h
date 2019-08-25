@@ -8,6 +8,7 @@ class PollyIntegration;
 class MainWindow;
 class PeakDetectionSettings;
 class OptionsDialogSettings;
+class AutoUpdate;
 
 class Controller:  public QObject
 {
@@ -16,6 +17,9 @@ public:
     Controller();
     ~Controller();
     MainWindow* getMainWindow() { return _mw; }
+    AutoUpdate* getUpdater() {
+        return _updater;
+    }
     PollyIntegration* iPolly;
 public Q_SLOTS:
     void updatePeakDetectionSettings(PeakDetectionSettings* pd);
@@ -26,6 +30,7 @@ public Q_SLOTS:
 private:
     MainWindow* _mw;
     DownloadManager* _dlManager;
+    AutoUpdate* _updater;
 
 
     void _updateMavenParameters(const QString& key, const QVariant& value);

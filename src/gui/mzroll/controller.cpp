@@ -5,15 +5,20 @@
 #include "mainwindow.h"
 #include "pollyintegration.h"
 #include <common/downloadmanager.h>
+#include <common/autoupdate.h>
 
 Controller::Controller()
 {
 
     _dlManager = new DownloadManager;
     iPolly = new PollyIntegration(_dlManager);
-
+    _updater = new AutoUpdate(_dlManager);
     _mw = new MainWindow(this);
+
+
+
     updateUi();
+
     connect(_mw->peakDetectionDialog, &PeakDetectionDialog::updateSettings, this, &Controller::updatePeakDetectionSettings);
     connect(_mw->peakDetectionDialog, &PeakDetectionDialog::settingsUpdated, this, &Controller::_updateSettingsForSave);
     connect(_mw->settingsForm, &SettingsForm::updateSettings, this, &Controller::updateOptionsDialogSettings);
@@ -22,6 +27,10 @@ Controller::Controller()
     connect(_mw, &MainWindow::loadedSettings, this, &Controller::updateUi);
     connect(_mw->settingsForm, &SettingsForm::resetSettings, this, &Controller::resetMP);
     connect(_mw->peakDetectionDialog, &PeakDetectionDialog::resetSettings, this, &Controller::resetMP);
+
+//    connect(updater, &AutoUpdate::success, this, &MainWindow::updateInstalled);
+//    connect(updater, &AutoUpdate::failure, this, &MainWindow::updateFailed);
+
     _mw->settingsForm->triggerSettingsUpdate();
     _mw->peakDetectionDialog->triggerSettingsUpdate();
 }

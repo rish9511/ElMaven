@@ -8,6 +8,7 @@ PollyIntegration::PollyIntegration(DownloadManager* dlManager):
     jsPath(""),
     _fPtr(nullptr)
 {
+    setObjectName("PollyIntegration");
     credFile = QStandardPaths::writableLocation(QStandardPaths::QStandardPaths::GenericConfigLocation) + QDir::separator() + "cred_file";
 
     // It's important to look for node in the system first, as it might not always be present in the bin dir.
