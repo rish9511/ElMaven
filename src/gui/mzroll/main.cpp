@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 //    checkForUpdate();
 
 
-    elmavexceptionhandler::init();
+    // elmavexceptionhandler::init();
 
     QPixmap pixmap(":/images/splash.png","PNG",Qt::ColorOnly);
     QSplashScreen splash(pixmap);
