@@ -462,6 +462,11 @@ int Database::loadNISTLibrary(QString filepath,
     int compoundCount = 0;
     int currentLine = 0;
 
+    // TODO: remove this, added only for test purposes
+    set<string> adducts;
+    bool onlyReadParentAdducts = false;
+    bool currentCompoundIsParentAdduct = false;
+
     QTextStream stream(&data);
     while (!stream.atEnd()) {
         QString line = stream.readLine();
@@ -474,8 +479,15 @@ int Database::loadNISTLibrary(QString filepath,
                     auto exactMass = MassCalculator::computeMass(formula, 0);
                     currentCompound->mass = exactMass;
                 }
-                if (addCompound(currentCompound))
-                    ++compoundCount;
+                if (onlyReadParentAdducts) {
+                    if (currentCompoundIsParentAdduct
+                        && addCompound(currentCompound)) {
+                        ++compoundCount;
+                    }
+                } else {
+                    if (addCompound(currentCompound))
+                        ++compoundCount;
+                }
             }
 
             // we need to check this again before creating a new compound,
@@ -483,10 +495,30 @@ int Database::loadNISTLibrary(QString filepath,
             if (line.startsWith("NAME:", Qt::CaseInsensitive)) {
                 // new compound
                 QString name = line.mid(5, line.length()).simplified();
+                QRegularExpression re("\\[M([+-]\\w+)*\\]\\(?(\\d*)([+-]?)\\)?");
+                int ionizationMode = 0;
+                QRegularExpressionMatch match = re.match(name);
+                if (match.hasMatch()) {
+                    string adductName = match.captured(0).toStdString();
+                    adducts.insert(adductName);
+                    QString sign = match.captured(3);
+                    ionizationMode = sign == "-" ? -1 : +1;
+                    if (ionizationMode == +1
+                        && adductName == MassCalculator::PlusHAdduct->getName()) {
+                        currentCompoundIsParentAdduct = true;
+                    } else if (ionizationMode == -1
+                               && adductName == MassCalculator::MinusHAdduct->getName()) {
+                        currentCompoundIsParentAdduct = true;
+                    } else {
+                        currentCompoundIsParentAdduct = false;
+                    }
+                }
+
                 currentCompound = new Compound(name.toStdString(),
                                                name.toStdString(),
                                                "",
                                                0);
+                currentCompound->ionizationMode = ionizationMode;
                 currentCompound->db = dbName;
                 capturePeaks = false;
             }
@@ -599,6 +631,9 @@ int Database::loadNISTLibrary(QString filepath,
                       lineCount);
         }
     }
+
+    for (auto& adductName : adducts)
+        cerr << adductName << endl;
 
     return compoundCount;
 }
