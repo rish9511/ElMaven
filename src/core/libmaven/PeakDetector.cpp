@@ -13,6 +13,7 @@
 #include "mzMassSlicer.h"
 #include "peakFiltering.h"
 #include "groupFiltering.h"
+#include "masscutofftype.h"
 #include "mavenparameters.h"
 #include "mzMassCalculator.h"
 #include "isotopeDetection.h"
@@ -282,15 +283,32 @@ vector<mzSlice*> PeakDetector::processCompounds(vector<Compound*> set,
                 continue;
 
             mzSlice* slice = new mzSlice();
-            slice->mz = adduct->computeAdductMz(compoundMass);
+            regex rgx("\\[M([+-]\\w+)*\\]\\(?(\\d*)([+-]?)\\)?");
+            smatch matches;
+            if (regex_search(compound->name, matches, rgx)) {
+                Adduct* parentIon = nullptr;
+                if (compound->ionizationMode == -1) {
+                    parentIon = MassCalculator::MinusHAdduct;
+                } else {
+                    parentIon = MassCalculator::PlusHAdduct;
+                }
+
+                if (adduct->getName() == parentIon->getName()) {
+                    slice->mz = compoundMass;
+                } else {
+                    auto neutralMass = parentIon->computeParentMass(compoundMass);
+                    slice->mz = adduct->computeAdductMz(neutralMass);
+                }
+            } else {
+                slice->mz = adduct->computeAdductMz(compoundMass);
+            }
+
             slice->compound = compound; // TODO: this assignment is meaningless.
             slice->compoundVector = compoundVector;
             slice->adduct = adduct;
-            bool success =
-                slice->calculateMzMinMax(mavenParameters->compoundMassCutoffWindow,
-                                         adduct->getCharge());
-            if (!success)
-                continue;
+            auto del = mavenParameters->compoundMassCutoffWindow->massCutoffValue(slice->mz);
+            slice->mzmin = slice->mz - del;
+            slice->mzmax = slice->mz + del;
             slice->calculateRTMinMax(mavenParameters->matchRtFlag,
                                      mavenParameters->compoundRTWindow);
             slice->setSRMId();
