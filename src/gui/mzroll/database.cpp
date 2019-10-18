@@ -464,7 +464,7 @@ int Database::loadNISTLibrary(QString filepath,
 
     // TODO: remove this, added only for test purposes
     set<string> adducts;
-    bool onlyReadParentAdducts = false;
+    bool onlyReadParentAdducts = true;
     bool currentCompoundIsParentAdduct = false;
 
     QTextStream stream(&data);
@@ -886,6 +886,17 @@ int Database::loadCompoundCSVFile(string filename)
 
         if (id.empty()&& !name.empty()) id=name;
         if (id.empty() && name.empty()) id="cmpd:" + integer2string(loadCount);
+
+        bool onlyReadParentAdducts = true;
+        QRegularExpression re("\\[M([+-]\\w+)*\\]\\(?(\\d*)([+-]?)\\)?");
+        QRegularExpressionMatch match = re.match(QString(name.c_str()));
+        if (onlyReadParentAdducts && match.hasMatch()) {
+            string adductName = match.captured(0).toStdString();
+            if (adductName != MassCalculator::PlusHAdduct->getName()
+                && adductName != MassCalculator::MinusHAdduct->getName()) {
+                continue;
+            }
+        }
 
         if ( mz > 0 || ! formula.empty() || precursormz > 0) {
             Compound* compound = new Compound(id,name,formula,charge);
